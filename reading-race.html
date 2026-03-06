@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>📚 독서 달리기 대회</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Jua&family=Noto+Sans+KR:wght@400;700;900&display=swap');
+
+:root {
+  --sky-top: #87CEEB;
+  --sky-bot: #c8eaff;
+  --panel-bg: rgba(255,255,255,0.93);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Noto Sans KR', sans-serif;
+  background: linear-gradient(180deg, var(--sky-top) 0%, var(--sky-bot) 35%, #b8dba8 35%, #4caf50 52%, #2e7d32 100%);
+  min-height: 100vh;
+  overflow-x: hidden;
+  padding-bottom: 30px;
+}
+
+/* ── CLOUDS ── */
+.cloud-layer { position: fixed; top: 0; left: 0; width: 100%; height: 34%; pointer-events: none; z-index: 0; overflow: hidden; }
+.cloud {
+  position: absolute;
+  background: #fff;
+  border-radius: 50px;
+  opacity: 0.88;
+  animation: cloudDrift linear infinite;
+}
+.cloud .c1,.cloud .c2 {
+  position: absolute; background: #fff; border-radius: 50%;
+}
+@keyframes cloudDrift { from { transform: translateX(105vw); } to { transform: translateX(-250px); } }
+
+/* ── HEADER ── */
+header {
+  position: relative; z-index: 5;
+  text-align: center;
+  padding: 14px 20px 8px;
+}
+.banner-rope {
+  display: flex; justify-content: center; align-items: flex-start; gap: 0;
+  margin-bottom: 2px;
+}
+.bunting {
+  width: 22px; height: 26px;
+  clip-path: polygon(0 0, 100% 0, 50% 100%);
+  margin: 0 1px;
+}
+.main-title {
+  font-family: 'Jua', sans-serif;
+  font-size: clamp(18px, 5vw, 24px);
+  color: #fff;
+  text-shadow: 0 2px 8px rgba(0,0,0,0.3), 0 0 20px rgba(0,0,0,0.2);
+  letter-spacing: 1px;
+}
+.sub-title {
+  display: inline-block;
+  background: rgba(255,255,255,0.85);
+  color: #2d6a1b;
+  font-size: 11px; font-weight: 700;
+  padding: 3px 14px; border-radius: 20px;
+  margin-top: 5px;
+}
+.live-dot { display:inline-block;width:7px;height:7px;background:#e53935;border-radius:50%;animation:blink 1s infinite;margin-right:4px;vertical-align:middle; }
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.15}}
+
+/* ── INPUT PANEL ── */
+.input-wrap {
+  position: relative; z-index: 5;
+  max-width: 560px; margin: 10px auto 0; padding: 0 12px;
+}
+.input-panel {
+  background: var(--panel-bg);
+  border-radius: 14px; padding: 14px 16px;
+  box-shadow: 0 4px 18px rgba(0,0,0,0.18);
+}
+.panel-label {
+  font-family: 'Jua', sans-serif; font-size: 13px; color: #666; margin-bottom: 9px;
+}
+.input-row { display: flex; gap: 8px; align-items: flex-end; }
+.ig { flex: 1; }
+.ig label { display: block; font-size: 11px; color: #999; margin-bottom: 3px; }
+select, input[type=number] {
+  width: 100%; border: 2px solid #e0e0e0; border-radius: 8px;
+  font-size: 15px; font-family: 'Noto Sans KR',sans-serif;
+  padding: 9px 10px; background: #fff; color: #222;
+  -webkit-appearance: none;
+}
+select:focus, input:focus { outline: none; border-color: #4caf50; }
+.go-btn {
+  background: linear-gradient(135deg, #ff6b35, #e53935);
+  color: #fff; font-family: 'Jua', sans-serif; font-size: 16px;
+  border: none; border-radius: 8px; padding: 9px 18px;
+  cursor: pointer; flex-shrink: 0;
+  box-shadow: 0 3px 10px rgba(229,57,53,0.4);
+  transition: transform .12s;
+}
+.go-btn:active { transform: scale(.94); }
+.page-note { font-size: 11px; color: #bbb; text-align: right; margin-top: 5px; }
+
+/* ── TRACK SECTION ── */
+.track-section {
+  position: relative; z-index: 3;
+  max-width: 560px; margin: 14px auto 0; padding: 0 12px;
+}
+
+/* 결승선 플래그 (트랙 오른쪽 고정) */
+.finish-flag-wrap {
+  position: absolute;
+  right: 20px; top: 0;
+  z-index: 10; pointer-events: none;
+}
+.finish-flag-img {
+  font-size: 24px;
+  animation: flagFlap 0.65s ease-in-out infinite alternate;
+  transform-origin: left bottom;
+  display: block; line-height: 1;
+}
+@keyframes flagFlap { from{transform:rotate(-6deg) scaleX(1)} to{transform:rotate(7deg) scaleX(0.9)} }
+.finish-stick-line {
+  width: 2px; background: rgba(255,255,255,0.6);
+  margin: 0 auto;
+}
+
+/* ── LANES ── */
+.lanes-outer {
+  border-radius: 10px; overflow: hidden;
+  box-shadow: 0 6px 24px rgba(0,0,0,0.25);
+}
+.lane {
+  position: relative; height: 54px;
+  display: flex; align-items: center;
+  border-bottom: 2px dashed rgba(255,255,255,0.45);
+  overflow: hidden;
+}
+.lane:last-child { border-bottom: none; }
+.lane:nth-child(odd)  { background: #c8944a; }
+.lane:nth-child(even) { background: #b5803a; }
+
+/* 레인 번호 */
+.ln { position:absolute;left:5px;top:50%;transform:translateY(-50%);font-family:'Jua',sans-serif;font-size:10px;color:rgba(255,255,255,0.6);width:16px;text-align:center;z-index:2; }
+
+/* 출발선 */
+.lane::before {
+  content:''; position:absolute; left:26px; top:0; bottom:0; width:3px;
+  background: repeating-linear-gradient(180deg,#fff 0,#fff 5px,transparent 5px,transparent 10px);
+  opacity:.55;
+}
+
+/* 결승선 체크 패턴 */
+.lane-finish {
+  position:absolute;right:20px;top:0;bottom:0;width:12px;
+  background: repeating-linear-gradient(0deg,#000 0,#000 6px,#fff 6px,#fff 12px);
+  opacity:.55; z-index:1;
+}
+
+/* ── RUNNER ── */
+.runner {
+  position: absolute;
+  left: 26px; top: 50%;
+  transform: translateY(-50%);
+  transition: left 1s cubic-bezier(.34,1.45,.64,1);
+  z-index: 4;
+  display: flex; flex-direction: column; align-items: center;
+  pointer-events: none;
+  will-change: left;
+}
+.animal {
+  font-size: 28px; line-height: 1;
+  filter: drop-shadow(1px 2px 3px rgba(0,0,0,0.35));
+  animation: hop .42s steps(2) infinite;
+}
+.runner.idle .animal { animation: none; }
+@keyframes hop {
+  0%   { transform: translateY(0px)  rotate(-3deg); }
+  50%  { transform: translateY(-4px) rotate(3deg); }
+  100% { transform: translateY(0px)  rotate(-3deg); }
+}
+.rname {
+  font-family: 'Jua', sans-serif; font-size: 9.5px; color: #fff;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.9); white-space: nowrap;
+  margin-top: 0px; line-height: 1.2;
+}
+.rpct {
+  font-size: 8.5px; color: #ffe082; font-weight: 900;
+  text-shadow: 0 1px 3px rgba(0,0,0,.8); line-height: 1;
+}
+
+/* 1등 효과 */
+.runner.leader .animal {
+  animation: hop1 .32s steps(2) infinite;
+  filter: drop-shadow(0 0 8px gold) drop-shadow(1px 2px 3px rgba(0,0,0,.35));
+}
+@keyframes hop1 {
+  0%   { transform: translateY(0px)  rotate(-5deg) scaleX(1.05); }
+  50%  { transform: translateY(-6px) rotate(5deg)  scaleX(.96); }
+  100% { transform: translateY(0px)  rotate(-5deg) scaleX(1.05); }
+}
+.crown {
+  position: absolute; top: -16px; left: 50%;
+  transform: translateX(-50%);
+  font-size: 14px;
+  animation: crownBob .55s ease-in-out infinite alternate;
+}
+@keyframes crownBob { from{transform:translateX(-50%) translateY(0)} to{transform:translateX(-50%) translateY(-4px)} }
+.wave-hand {
+  position: absolute; top: -14px; right: -14px;
+  font-size: 14px;
+  animation: waveAnim .4s ease-in-out infinite alternate;
+}
+@keyframes waveAnim { from{transform:rotate(-20deg)} to{transform:rotate(20deg)} }
+
+/* 먼지 */
+.dust-wrap { position:absolute;pointer-events:none;z-index:3;bottom:8px; }
+.dp {
+  position:absolute; width:5px;height:5px;border-radius:50%;
+  background:rgba(255,210,120,.75);
+  animation: dustPoof linear infinite;
+}
+@keyframes dustPoof { 0%{opacity:.9;transform:translate(0,0) scale(1)} 100%{opacity:0;transform:translate(-16px,-7px) scale(0)} }
+
+/* ── STATS TABLE ── */
+.stats-wrap {
+  max-width: 560px; margin: 12px auto 0; padding: 0 12px;
+  position: relative; z-index: 5;
+}
+.stats-panel {
+  background: var(--panel-bg); border-radius: 12px; padding: 12px 14px;
+  box-shadow: 0 3px 12px rgba(0,0,0,0.14);
+}
+.stats-head { font-family:'Jua',sans-serif;font-size:13px;color:#555;margin-bottom:8px; }
+.srow {
+  display:flex;align-items:center;gap:7px;
+  padding:4px 0; border-bottom:1px solid #f0f0f0;font-size:13px;
+}
+.srow:last-child{border-bottom:none}
+.srank{font-family:'Jua',sans-serif;width:22px;color:#bbb;font-size:12px;}
+.srank.r1{color:#f5a623}.srank.r2{color:#9e9e9e}.srank.r3{color:#c87533}
+.sanimal{font-size:17px;width:22px}
+.sname{flex:1;font-weight:700}
+.sbar-wrap{flex:1.5;height:6px;background:#eee;border-radius:3px;overflow:hidden}
+.sbar-fill{height:100%;border-radius:3px;transition:width .8s ease}
+.spct{font-family:'Jua',sans-serif;font-size:14px;color:#333;min-width:36px;text-align:right}
+.spages{font-size:10px;color:#bbb;min-width:30px;text-align:right}
+
+/* ── BOTTOM BAR ── */
+.bottom-bar {
+  max-width:560px;margin:8px auto 0;padding:0 12px;
+  display:flex;justify-content:space-between;align-items:center;
+  position:relative;z-index:5;
+}
+.uptime{font-size:11px;color:rgba(255,255,255,.8)}
+.reset-btn{background:rgba(255,255,255,.25);border:1px solid rgba(255,255,255,.5);color:#fff;font-size:11px;padding:4px 12px;border-radius:6px;cursor:pointer;}
+
+/* toast */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:#43a047;color:#fff;font-weight:700;font-size:14px;padding:10px 22px;border-radius:20px;transition:transform .3s;z-index:99;white-space:nowrap;box-shadow:0 4px 14px rgba(67,160,71,.5);}
+.toast.show{transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+
+<div class="cloud-layer" id="cloudLayer"></div>
+
+<!-- HEADER -->
+<header>
+  <div class="banner-rope" id="buntingRow"></div>
+  <div class="main-title">🏃 독서 달리기 대회 📚</div>
+  <div>
+    <span class="sub-title">
+      <span class="live-dot"></span>
+      송길영 『경량문명의 탄생』 · 트레바리 3회차 · 280p
+    </span>
+  </div>
+</header>
+
+<!-- INPUT -->
+<div class="input-wrap">
+  <div class="input-panel">
+    <div class="panel-label">🎽 내 독서 현황 업데이트하기</div>
+    <div class="input-row">
+      <div class="ig">
+        <label>참가자 선택</label>
+        <select id="nameSelect"><option value="">-- 이름 선택 --</option></select>
+      </div>
+      <div class="ig" style="max-width:100px">
+        <label>현재 페이지</label>
+        <input type="number" id="pageInput" min="0" max="280" placeholder="0~280">
+      </div>
+      <button class="go-btn" onclick="submitReading()">달려! 🏃</button>
+    </div>
+    <div class="page-note">전체 280 페이지</div>
+  </div>
+</div>
+
+<!-- TRACK -->
+<div class="track-section" id="trackSection">
+  <div class="finish-flag-wrap" id="flagWrap">
+    <div class="finish-flag-img">🏁</div>
+    <div class="finish-stick-line" id="flagStick"></div>
+  </div>
+  <div class="lanes-outer" id="lanesOuter"></div>
+</div>
+
+<!-- STATS -->
+<div class="stats-wrap">
+  <div class="stats-panel">
+    <div class="stats-head">🏅 현재 순위판</div>
+    <div id="statsList"></div>
+  </div>
+</div>
+
+<div class="bottom-bar">
+  <div class="uptime" id="uptime"></div>
+  <button class="reset-btn" onclick="confirmReset()">🔄 초기화</button>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const MEMBERS = [
+  "한채윤","한성원","최현진","최한아","정요한",
+  "신수경","신상준","송하연","박헌일","류희선",
+  "이남규","김동현","김동주"
+];
+const TOTAL = 280;
+
+// 13명 동물 (머리띠 느낌 있는 것들)
+const ANIMALS = ["🐰","🦊","🐻","🐯","🐸","🐷","🐨","🦝","🐹","🦔","🐺","🦁","🐧"];
+// 헤어밴드/머리띠 이모지 덧붙임 (이름 위)
+const HEADBANDS = ["🎀","🎽","🏅","⭐","🌟","🎯","🎪","🌈","🔥","💫","🌀","🍀","⚡"];
+const COLORS = ["#e53935","#e91e8c","#9c27b0","#3f51b5","#2196f3","#00bcd4","#4caf50","#8bc34a","#ff9800","#ff5722","#795548","#607d8b","#009688"];
+const BUNTING_COLS = ["#e53935","#ff9800","#ffeb3b","#4caf50","#2196f3","#9c27b0"];
+
+let data = {};
+
+function init() {
+  buildBunting();
+  buildClouds();
+  buildSelect();
+  buildLanes();
+  data = {};
+  try { localStorage.removeItem('readingRace'); } catch(e){}
+  render();
+}
+
+function buildBunting() {
+  const row = document.getElementById('buntingRow');
+  for (let i = 0; i < 20; i++) {
+    const t = document.createElement('div');
+    t.className = 'bunting';
+    t.style.background = BUNTING_COLS[i % BUNTING_COLS.length];
+    row.appendChild(t);
+  }
+}
+
+function buildClouds() {
+  const lay = document.getElementById('cloudLayer');
+  [[90,32,6,30,0],[65,24,20,24,-9],[115,40,3,38,-18],[55,20,14,20,-5],[80,28,24,28,-14]]
+    .forEach(([w,h,top,dur,delay])=>{
+      const c = document.createElement('div');
+      c.className = 'cloud';
+      c.style.cssText = `width:${w}px;height:${h}px;top:${top}%;animation-duration:${dur}s;animation-delay:${delay}s`;
+      c.innerHTML = `<div class="c1" style="width:${w*.5}px;height:${h*1.4}px;top:-${h*.4}px;left:${w*.18}px"></div>
+                     <div class="c2" style="width:${w*.38}px;height:${h*1.2}px;top:-${h*.25}px;left:${w*.52}px"></div>`;
+      lay.appendChild(c);
+    });
+}
+
+function buildSelect() {
+  const sel = document.getElementById('nameSelect');
+  MEMBERS.forEach(m => {
+    const o = document.createElement('option');
+    o.value = m; o.textContent = m;
+    sel.appendChild(o);
+  });
+}
+
+function buildLanes() {
+  const outer = document.getElementById('lanesOuter');
+  outer.innerHTML = '';
+  const totalH = MEMBERS.length * 54;
+  document.getElementById('flagStick').style.height = (totalH - 28) + 'px';
+
+  MEMBERS.forEach((name, i) => {
+    const lane = document.createElement('div');
+    lane.className = 'lane';
+    lane.id = `lane-${i}`;
+    lane.innerHTML = `
+      <div class="ln">${i+1}</div>
+      <div class="lane-finish"></div>
+      <div class="runner idle" id="runner-${i}">
+        <div class="animal">${ANIMALS[i]}</div>
+        <div class="rname">${name}</div>
+        <div class="rpct">0%</div>
+      </div>`;
+    outer.appendChild(lane);
+  });
+}
+
+function submitReading() {
+  const name = document.getElementById('nameSelect').value;
+  const page = parseInt(document.getElementById('pageInput').value);
+  if (!name) { showToast('이름을 선택해주세요! 🙋'); return; }
+  if (isNaN(page)||page<0||page>TOTAL) { showToast(`0~${TOTAL} 페이지로 입력해주세요!`); return; }
+  data[name] = page;
+  try { localStorage.setItem('readingRace', JSON.stringify(data)); } catch(e){}
+  render();
+  document.getElementById('pageInput').value = '';
+  const pct = Math.round(page/TOTAL*100);
+  showToast(`${ANIMALS[MEMBERS.indexOf(name)]} ${name} — ${pct}% 달리는 중!`);
+}
+
+function render() {
+  const laneEl = document.querySelector('.lane');
+  const laneW = laneEl ? laneEl.offsetWidth : 320;
+  const START = 26;
+  const END = laneW - 38; // finish line 앞
+  const RUNNER_W = 28;
+  const TRAVEL = END - START - RUNNER_W;
+
+  // 리더 찾기
+  let leaderIdx = -1, leaderPct = -1;
+  MEMBERS.forEach((name, i) => {
+    const pct = (data[name]||0) / TOTAL;
+    if (pct > leaderPct) { leaderPct = pct; leaderIdx = i; }
+  });
+
+  MEMBERS.forEach((name, i) => {
+    const pages = data[name] || 0;
+    const pct = pages / TOTAL;
+    const posX = START + pct * TRAVEL;
+
+    const runner = document.getElementById(`runner-${i}`);
+    if (!runner) return;
+
+    runner.style.left = posX + 'px';
+    runner.querySelector('.rpct').textContent = Math.round(pct*100) + '%';
+
+    const isLeader = (i === leaderIdx && leaderPct > 0);
+    const isMoving = pages > 0;
+
+    runner.classList.toggle('idle', !isMoving);
+    runner.classList.toggle('leader', isLeader);
+
+    // 왕관 + 손흔들기
+    let crown = runner.querySelector('.crown');
+    let wave  = runner.querySelector('.wave-hand');
+    if (isLeader) {
+      if (!crown) {
+        crown = document.createElement('div');
+        crown.className = 'crown'; crown.textContent = '👑';
+        runner.appendChild(crown);
+      }
+      if (!wave) {
+        wave = document.createElement('div');
+        wave.className = 'wave-hand'; wave.textContent = '🙌';
+        runner.appendChild(wave);
+      }
+      // 먼지
+      spawnDust(i, posX);
+    } else {
+      if (crown) crown.remove();
+      if (wave)  wave.remove();
+      const lane = document.getElementById(`lane-${i}`);
+      const dw = lane && lane.querySelector('.dust-wrap');
+      if (dw) dw.remove();
+    }
+  });
+
+  renderStats(leaderIdx);
+
+  if (Object.keys(data).length > 0) {
+    document.getElementById('uptime').textContent =
+      new Date().toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit',second:'2-digit'})+' 기준';
+  }
+}
+
+function spawnDust(laneIdx, posX) {
+  const lane = document.getElementById(`lane-${laneIdx}`);
+  if (!lane) return;
+  let dw = lane.querySelector('.dust-wrap');
+  if (dw) { dw.style.left = (posX - 6) + 'px'; return; }
+  dw = document.createElement('div');
+  dw.className = 'dust-wrap';
+  dw.style.left = (posX - 6) + 'px';
+  for (let j=0;j<4;j++){
+    const p=document.createElement('div'); p.className='dp';
+    p.style.cssText=`left:${j*4}px;bottom:${j*2}px;animation-duration:${.45+j*.18}s;animation-delay:${j*.12}s`;
+    dw.appendChild(p);
+  }
+  lane.appendChild(dw);
+}
+
+function renderStats(leaderIdx) {
+  const sorted = MEMBERS
+    .map((name, i) => ({ name, i, pages: data[name]||0, pct: Math.round((data[name]||0)/TOTAL*100) }))
+    .sort((a,b)=>b.pct-a.pct);
+
+  const el = document.getElementById('statsList');
+  if (sorted.every(s=>s.pct===0)) {
+    el.innerHTML = '<div style="text-align:center;color:#ccc;padding:14px;font-size:13px">아직 아무도 달리지 않았어요 🐾</div>';
+    return;
+  }
+  el.innerHTML = sorted.map((s,rank)=>{
+    const rm = rank===0?'r1':rank===1?'r2':rank===2?'r3':'';
+    const rl = rank===0?'🥇':rank===1?'🥈':rank===2?'🥉':`${rank+1}`;
+    return `<div class="srow">
+      <div class="srank ${rm}">${rl}</div>
+      <div class="sanimal">${ANIMALS[s.i]}</div>
+      <div class="sname">${s.name}</div>
+      <div class="sbar-wrap"><div class="sbar-fill" style="width:${s.pct}%;background:${COLORS[s.i]}"></div></div>
+      <div class="spct">${s.pct}%</div>
+      <div class="spages">${s.pages}p</div>
+    </div>`;
+  }).join('');
+}
+
+function confirmReset() {
+  if (confirm('모든 기록을 초기화할까요? 🏁')) {
+    data = {};
+    try { localStorage.removeItem('readingRace'); } catch(e){}
+    buildLanes();
+    render();
+    showToast('초기화 완료! 새 레이스 시작 🏁');
+  }
+}
+
+function showToast(msg) {
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2400);
+}
+
+window.addEventListener('resize', render);
+document.fonts && document.fonts.ready.then(render);
+init();
+</script>
+</body>
+</html>
